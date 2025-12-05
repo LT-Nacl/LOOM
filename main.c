@@ -247,7 +247,7 @@ void test_world_and_rays()
 		p.state = fmod(p.state, 2 * M_PI);
         */
         
-		int num_rays = 128;
+		int num_rays = 512;
 		struct hit *scan = cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
 			float dy =  (f.height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
