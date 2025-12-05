@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -lm
 TARGET = prog
 SOURCES = main.c util/L_term_gfx.c
 
