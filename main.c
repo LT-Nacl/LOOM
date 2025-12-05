@@ -47,10 +47,21 @@ struct hit { //adhoc tuple
 
 struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], int num_rays){
     struct hit *results = malloc(sizeof(struct hit) * num_rays);
-    
+
     float start_angle = p->state - HALF_FOV;
     float end_angle = p->state + HALF_FOV;
     float step = (end_angle - start_angle) / num_rays;
+    for(int i = 0; i < num_rays; i++){
+        float ang = start_angle + i * step;
+        float dx = cosf(ang);
+        float dy = sinf(ang);
+
+        float working_dist; // for the tuple once the ray hits it
+        int val;
+
+
+    }
+
 }
 
 
