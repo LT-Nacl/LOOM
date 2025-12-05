@@ -73,12 +73,12 @@ void test_world_and_rays()
 {
     int simple_world[8][8] = {
         {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 2, 1},
         {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 2, 1},
+        {1, 0, 0, 0, 0, 0, 2, 1},
         {1, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0},
-        {1, 0, 0, 0, 0, 0, 0, 2},
-        {1, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 2, 1},
         {1, 1, 1, 1, 1, 1, 1, 1}
     };
 
@@ -109,15 +109,27 @@ void test_world_and_rays()
     printf("Player: pos(%d,%d) angle=%.2f rad (%.0f deg)\n\n", 
            p.x, p.y, p.state, p.state * 180.0f / M_PI);
 
-    int num_rays = 16;
+    int num_rays = 64;
     struct hit *scan = cast_rays(&p, test_arr, num_rays);
 
     printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
-    struct frame *test_f = frame_create(0, 32, 16)
+
+    int x_max = 5;
+
+    struct frame *test_f = frame_create(0, 32, 16);
     for (int i = 0; i < num_rays; i++) {
+
+        float dy = (x_max - scan[i].distance)/x_max *test_f->height;
+        int low = test_f->height/2 - dy;
+        int high= test_f->height/2 + dy;
+        int dx = (i * 2 * HALF_FOV / num_rays-HALF_FOV)/(2*HALF_FOV) * test_f->width;
+        int x = test_f->width/2 - dx;
+        draw_col_sing(test_f, (scan[i].value == 2) ? '#' : '@', x, low, high);
         printf("Ray %d: dist=%.2f  hit=%d  ang=%.2f\n", i, scan[i].distance, scan[i].value, p.state + i * 2 * HALF_FOV / num_rays-HALF_FOV);
     }
 
+    usleep(1*1000000);
+    frame_draw(test_f);
     free(scan);
 }
 
