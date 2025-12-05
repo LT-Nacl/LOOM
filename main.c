@@ -59,6 +59,14 @@ struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], i
         float working_dist; // for the tuple once the ray hits it
         int val;
 
+        while(working_dist < SCAN_MAX){
+            int scanx = (int)(p->x + dx *working_dist); //ray properties
+            int scany = (int)(p->y + dy *working_dist);
+            if (scanx < 0 || scany < 0 || scanx >= LEVEL_WIDTH || scany >= LEVEL_HEIGHT) {
+                val = -1;
+                break;
+            }
+        }
 
     }
 
