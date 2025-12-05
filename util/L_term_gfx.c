@@ -4,6 +4,21 @@
 
 #define FRAMERATE 60.0f
 
+void putchar_rgb(int color, char c) {
+    int r = (color >> 16) & 0xFF;
+    int g = (color >> 8) & 0xFF;
+    int b = color & 0xFF;
+    if (r < 0){ r = 0;} if (r > 255) {r = 255;}
+    if (g < 0) {g = 0;} if (g > 255) {g = 255;}
+    if (b < 0) {b = 0;} if (b > 255) {b = 255;}
+    printf("\x1b[38;2;%d;%d;%dm", r, g, b);
+    putchar(c);
+}
+
+void reset_color() {
+    printf("\x1b[0m");
+}
+
 struct frame{
     int id;
     int width;
@@ -44,8 +59,15 @@ void frame_draw(struct frame *f) {
         const char *row = &f->dat[y * f->width];
         for (int x = 0; x < f->width; x++) {
             char v = row[x];
+            if(v=='@'){
+                putchar_rgb(0x16161d,v);
+            }else if(v=='#'){
+                putchar_rgb(0x00ff00,v);   
+            }else{
             putchar(v ? v : ' ');
+            }
 
+            reset_color();
 
         }
         putchar('\n');
@@ -58,6 +80,19 @@ void draw_col_sing(struct frame *f, char val, int x, int lower, int upper) {
     for (int y = f->height-upper; y < (f->height-lower); y++){
         f->dat[y * f->width + x] = val;
     }
+}
+
+void draw_text(struct frame *f, const char *text, int x, int y, int color) {
+    int r = (color >> 16) & 0xFF;
+    int g = (color >> 8) & 0xFF;
+    int b = color & 0xFF;
+    printf("\x1b[38;2;%d;%d;%dm", r, g, b);
+    int i = 0;
+    while (text[i] != '\0' && (x + i) < f->width && y < f->height) {
+        f->dat[y * f->width + (x + i)] = text[i];
+        i++;
+    }
+    reset_color();
 }
 
 

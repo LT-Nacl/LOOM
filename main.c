@@ -134,40 +134,12 @@ void test_world_and_rays()
 	p.state = 0.0f;
 	edit_world[(int)p.y][(int)p.x] = 9;
 
-	/*
-	   printf("=== WORLD (8x8) ===\n");
-	   for (int y = 0; y < 8; y++) {
-	   for (int x = 0; x < 8; x++) {
-	   printf("%d ", simple_world[y][x]);
-	   }
-	   printf("\n");
-	   }
-	   printf("\n");
-
-
-
-
-	   printf("Player: pos(%d,%d) angle=%.2f rad (%.0f deg)\n\n", 
-	   p.x, p.y, p.state, p.state * 180.0f / M_PI);
-
-
-
-	   printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
-	   */
-	
-
-
-	/*
-	   for (int i = 0; i < num_rays; i++) {
-	   printf("Ray %d: dist=%.2f  hit=%d  ang=%.2f\n", i, scan[i].distance, scan[i].value, p.state + i * 2 * HALF_FOV / num_rays-HALF_FOV);
-	   }
-	   */
 	//float offset = 0.01f;
 	p.state = 0;
 	struct frame f;
 	f.id = 0;
-	f.width = 64;
-	f.height = 32;
+	f.width = 80;
+	f.height = 45;
     clear_frame(&f);
 	struct frame * test_f = &f;
     raw_begin();
@@ -177,22 +149,27 @@ void test_world_and_rays()
 		p.state = fmod(p.state, 2 * M_PI);
         */
         
-		int num_rays = 512;
+		int num_rays = 128;
 		struct hit * scan;
         scan = p_cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
 			float dy =  (f.height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
 			int low = f.height/2 - (int)dy;
 			int high = f.height/2 + (int)dy;
-			// int dx = (i * 2 * HALF_FOV / num_rays-HALF_FOV)/(2*HALF_FOV) * f.width;
 			int x = (i * f.width) / num_rays;
-			//printf("i=%d dist=%.2f dy=%.2f low=%d high=%d\n", i, scan[i].distance, dy, low, high);
 			if (low < 0) low = 0;
 			if (high >= f.height) high = f.height - 1;
 			if (x >= 0 && x < f.width && low <= high) {
 				draw_col_sing(test_f, (scan[i].value == 2) ? '#' : '@', x, low, high);
 			}
 		}
+        
+        //text
+        char buffer[16][64];
+        
+        int hp = 100;
+        sprintf(buffer[0], "X: %lf Y: %lf HP %d", p.x, p.y, hp);
+        draw_text(test_f, buffer[0], 0, 44, 0xffffff);
 		frame_draw(test_f);
 		free(scan);
         handle_input(&p, 1.0f, .1f);
@@ -207,21 +184,7 @@ void test_world_and_rays()
 
 
 int main(){
-    
 	test_world_and_rays();
     raw_end();
 	return 0;
-	/*
-	   struct frame *test_f = frame_create(0, 32, 16);
-
-
-	   set_pixel(test_f, '#', 0, 0);
-	   set_pixel(test_f, '#', f.width-1, f.height-1);
-	   draw_col_sing(test_f, '#', f.width/2, 1, f.height-2);
-
-	   while (1){
-	   frame_draw(test_f);
-	   usleep((int)(1000000 * (1.0f/FRAMERATE)));
-	   }
-	   */
 }
