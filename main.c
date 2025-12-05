@@ -3,6 +3,33 @@
 #include <stdio.h>
 #include "util/L_term_gfx.h"
 #include <math.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+static struct termios termios_orig;
+struct player{
+	float x;
+	float y;
+	char * inv; // for later
+	float state; //0 - 2PI.
+
+};
+
+
+void raw_begin(void) {
+    tcgetattr(STDIN_FILENO, &termios_orig);
+    struct termios raw = termios_orig;
+    raw.c_lflag &= ~(ICANON | ECHO | ISIG);
+    raw.c_cc[VMIN] = 1;  
+    raw.c_cc[VTIME] = 1;
+    tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+}
+
+void raw_end(void) {
+    tcsetattr(STDIN_FILENO, TCSANOW, &termios_orig);
+}
+
 
 
 
@@ -75,14 +102,39 @@ int edit_world[64][64] = {
 #define LEVEL_WIDTH 64
 #define HALF_FOV 0.78539816339f //pi/4
 int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH]; //the (test) world
+void handle_input(struct player *p, float move_speed, float turn_speed) {
+    int ch = getchar();
+    if (ch == -1) printf("nip");
+    
+    //printf("Key: %c, pos: (%.2f, %.2f), angle: %.2f\n", ch, p->x, p->y, p->state);
+    
+    switch(ch) {
+        case 'w':
+            if(!test_arr[(int)(p->x +cosf(p->state) * move_speed)][(int)(p->y + sinf(p->state) * move_speed)]){
+            p->x += cosf(p->state) * move_speed;
+            p->y += sinf(p->state) * move_speed;
+            }
+            break;
+        case 's':
+            if(!test_arr[(int)(p->x -cosf(p->state) * move_speed)][(int)(p->y - sinf(p->state) * move_speed)]){
+            p->x -= cosf(p->state) * move_speed;
+            p->y -= sinf(p->state) * move_speed;
+            }
+            break;
+        case 'a':
+            p->state -= turn_speed;
+            break;
+        case 'd': 
+            p->state += turn_speed;
+            break;
+        case 'q': 
+            raw_end(); 
+            exit(0);
+    }
+    
+    p->state = fmodf(p->state, 2 * M_PI);
+}
 
-struct player{
-	float x;
-	float y;
-	char * inv; // for later
-	float state; //0 - 2PI.
-
-};
 
 
 
@@ -188,11 +240,14 @@ void test_world_and_rays()
 	f.height = 32;
     clear_frame(&f);
 	struct frame * test_f = &f;
+    raw_begin();
 	while(1){
-
+        /* STATIC ANIMATION
 		p.state += offset;
 		p.state = fmod(p.state, 2 * M_PI);
-		int num_rays = 256;
+        */
+        
+		int num_rays = 128;
 		struct hit *scan = cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
 			float dy =  (f.height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
@@ -200,7 +255,7 @@ void test_world_and_rays()
 			int high = f.height/2 + (int)dy;
 			// int dx = (i * 2 * HALF_FOV / num_rays-HALF_FOV)/(2*HALF_FOV) * f.width;
 			int x = (i * f.width) / num_rays;
-			printf("i=%d dist=%.2f dy=%.2f low=%d high=%d\n", i, scan[i].distance, dy, low, high);
+			//printf("i=%d dist=%.2f dy=%.2f low=%d high=%d\n", i, scan[i].distance, dy, low, high);
 			if (low < 0) low = 0;
 			if (high >= f.height) high = f.height - 1;
 			if (x >= 0 && x < f.width && low <= high) {
@@ -209,7 +264,7 @@ void test_world_and_rays()
 		}
 		frame_draw(test_f);
 		free(scan);
-
+        handle_input(&p, 1.0f, .1f);
 		usleep((int)(1000000 * (1.0f/FRAMERATE)));
 	}
 	free(test_f);
@@ -221,7 +276,9 @@ void test_world_and_rays()
 
 
 int main(){
+    
 	test_world_and_rays();
+    raw_end();
 	return 0;
 	/*
 	   struct frame *test_f = frame_create(0, 32, 16);
