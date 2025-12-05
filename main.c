@@ -8,7 +8,7 @@
 
 #define LEVEL_HEIGHT 64
 #define LEVEL_WIDTH 64
-#define HALF_FOV 2 * M_PI
+#define HALF_FOV 0.78539816339f //pi/4
 int test_arr[LEVEL_WIDTH][LEVEL_HEIGHT]; //the (test) world
 struct player{
     int x;
@@ -38,7 +38,20 @@ struct player * init_player(unsigned int x, unsigned int y, int * world[64][64])
 //idea 1 naive check is to iterate through the world and check if the trig aligns
 //idea 2 sweep by angle and check from player out to the first non 0, works because distance is needed for drawing anyways
 
+struct hit { //adhoc tuple
+    float distance; 
+    int value; 
+};
 
+#define SCAN_MAX 200.0f
+
+struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], int num_rays){
+    struct hit *results = malloc(sizeof(struct hit) * num_rays);
+    
+    float start_angle = p->state - HALF_FOV;
+    float end_angle = p->state + HALF_FOV;
+    float step = (end_angle - start_angle) / num_rays;
+}
 
 
 
