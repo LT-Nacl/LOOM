@@ -44,7 +44,7 @@ struct hit { //adhoc tuple
 };
 
 #define SCAN_MAX 200.0f
-
+#define RAY_STEP 0.5f
 struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], int num_rays){
     struct hit *results = malloc(sizeof(struct hit) * num_rays);
 
@@ -62,14 +62,23 @@ struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], i
         while(working_dist < SCAN_MAX){
             int scanx = (int)(p->x + dx *working_dist); //ray properties
             int scany = (int)(p->y + dy *working_dist);
-            if (scanx < 0 || scany < 0 || scanx >= LEVEL_WIDTH || scany >= LEVEL_HEIGHT) {
+            if (scanx < 0 || scany < 0 || scanx >= LEVEL_WIDTH || scany >= LEVEL_HEIGHT) { //cond 1 out of bounds
                 val = -1;
                 break;
             }
+
+            if (world[scanx][scany]){ //cond 2 hit
+                val = world[scanx][scany];
+                break;
+            }
+
+            working_dist += RAY_STEP;
         }
-
+        if(working_dist > SCAN_MAX){ val = 0;}
+        results[i].value = val;
+        results[i].distance = working_dist;
     }
-
+    return results;
 }
 
 
