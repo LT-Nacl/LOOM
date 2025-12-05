@@ -115,8 +115,8 @@ void test_world_and_rays()
 
 	   printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
 	   */
-	float x_max = 3.0f;
-	struct frame *test_f = frame_create(0, 32, 16);
+	float x_max = 2.5f;
+	
 
 	/*
 	   for (int i = 0; i < num_rays; i++) {
@@ -126,10 +126,11 @@ void test_world_and_rays()
 	float offset = 0.01f;
 	p.state = 0;
 	while(1){
+        struct frame *test_f = frame_create(0, 32, 32);
 		p.state += offset;
 
 		p.state = fmod(p.state, 2 * M_PI);
-		int num_rays = 64;
+		int num_rays = 256;
 		struct hit *scan = cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
 			float dy =  (test_f->height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
@@ -146,6 +147,7 @@ void test_world_and_rays()
 		}
 		frame_draw(test_f);
 		free(scan);
+        free(test_f);
 		usleep((int)(1000000 * (1.0f/FRAMERATE)));
 	}
 
