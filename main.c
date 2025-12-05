@@ -116,7 +116,7 @@ void test_world_and_rays()
 	   printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
 	   */
 	float x_max = 2.5f;
-	
+
 
 	/*
 	   for (int i = 0; i < num_rays; i++) {
@@ -125,32 +125,37 @@ void test_world_and_rays()
 	   */
 	float offset = 0.01f;
 	p.state = 0;
+	struct frame f;
+	f.id = 0;
+	f.width = 64;
+	f.height = 32;
+    clear_frame(&f);
+	struct frame * test_f = &f;
 	while(1){
-        struct frame *test_f = frame_create(0, 32, 32);
-		p.state += offset;
 
+		p.state += offset;
 		p.state = fmod(p.state, 2 * M_PI);
 		int num_rays = 256;
 		struct hit *scan = cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
-			float dy =  (test_f->height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
-			int low = test_f->height/2 - (int)dy;
-			int high = test_f->height/2 + (int)dy;
-			// int dx = (i * 2 * HALF_FOV / num_rays-HALF_FOV)/(2*HALF_FOV) * test_f->width;
-			int x = (i * test_f->width) / num_rays;
+			float dy =  (f.height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
+			int low = f.height/2 - (int)dy;
+			int high = f.height/2 + (int)dy;
+			// int dx = (i * 2 * HALF_FOV / num_rays-HALF_FOV)/(2*HALF_FOV) * f.width;
+			int x = (i * f.width) / num_rays;
 			printf("i=%d dist=%.2f dy=%.2f low=%d high=%d\n", i, scan[i].distance, dy, low, high);
 			if (low < 0) low = 0;
-			if (high >= test_f->height) high = test_f->height - 1;
-			if (x >= 0 && x < test_f->width && low <= high) {
+			if (high >= f.height) high = f.height - 1;
+			if (x >= 0 && x < f.width && low <= high) {
 				draw_col_sing(test_f, (scan[i].value == 2) ? '#' : '@', x, low, high);
 			}
 		}
 		frame_draw(test_f);
 		free(scan);
-        free(test_f);
+
 		usleep((int)(1000000 * (1.0f/FRAMERATE)));
 	}
-
+	free(test_f);
 
 	usleep(1*1000000);
 
@@ -166,8 +171,8 @@ int main(){
 
 
 	   set_pixel(test_f, '#', 0, 0);
-	   set_pixel(test_f, '#', test_f->width-1, test_f->height-1);
-	   draw_col_sing(test_f, '#', test_f->width/2, 1, test_f->height-2);
+	   set_pixel(test_f, '#', f.width-1, f.height-1);
+	   draw_col_sing(test_f, '#', f.width/2, 1, f.height-2);
 
 	   while (1){
 	   frame_draw(test_f);
