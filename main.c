@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "util/L_term_gfx.h"
-#define _USE_MATH_DEFINES //google says i need ts
 #include <math.h>
+
+
 
 
 #define LEVEL_HEIGHT 64
 #define LEVEL_WIDTH 64
 #define HALF_FOV 0.78539816339f //pi/4
-int test_arr[LEVEL_WIDTH][LEVEL_HEIGHT]; //the (test) world
+int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH]; //the (test) world
 struct player{
     int x;
     int y;
@@ -18,19 +19,7 @@ struct player{
 
 };
 
-struct player * init_player(unsigned int x, unsigned int y, int * world[64][64]){
-    struct player * p = (struct player * )malloc(sizeof(struct player));
-    if(x<64 && y<64){ 
-        *world[x][y] = 99;
-        p->x = x;
-        p->y = y;
-    }else{
-        *world[LEVEL_WIDTH/2][LEVEL_HEIGHT/2] = p->state;
-        p->x = LEVEL_WIDTH/2;
-        p->y = LEVEL_HEIGHT/2;
-    }
-    return p;
-}
+
 
 //trig time
 
@@ -45,7 +34,7 @@ struct hit { //adhoc tuple
 
 #define SCAN_MAX 200.0f
 #define RAY_STEP 0.5f
-struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], int num_rays){
+struct hit * cast_rays(struct player *p, int world[LEVEL_HEIGHT][LEVEL_WIDTH], int num_rays){
     struct hit *results = malloc(sizeof(struct hit) * num_rays);
 
     float start_angle = p->state - HALF_FOV;
@@ -56,8 +45,8 @@ struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], i
         float dx = cosf(ang);
         float dy = sinf(ang);
 
-        float working_dist; // for the tuple once the ray hits it
-        int val;
+        float working_dist = 0.0f; // for the tuple once the ray hits it
+        int val = 0;
 
         while(working_dist < SCAN_MAX){
             int scanx = (int)(p->x + dx *working_dist); //ray properties
@@ -67,8 +56,8 @@ struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], i
                 break;
             }
 
-            if (world[scanx][scany]){ //cond 2 hit
-                val = world[scanx][scany];
+            if (world[scany][scanx] && !(world[scany][scanx] == 99)){ //cond 2 hit
+                val = world[scany][scanx];
                 break;
             }
 
@@ -80,10 +69,63 @@ struct hit * cast_rays(struct player *p, int world[LEVEL_WIDTH][LEVEL_HEIGHT], i
     }
     return results;
 }
+void test_world_and_rays()
+{
+    int simple_world[8][8] = {
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0, 0, 0, 2},
+        {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1}
+    };
 
+
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            test_arr[y][x] = simple_world[y][x];
+        }
+    }
+
+    struct player p;
+    p.x = 4;
+    p.y = 4;
+    p.state = 0.0f;
+    simple_world[p.y][p.x] = 9;
+    printf("=== WORLD (8x8) ===\n");
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            printf("%d ", simple_world[y][x]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+
+    
+    
+    printf("Player: pos(%d,%d) angle=%.2f rad (%.0f deg)\n\n", 
+           p.x, p.y, p.state, p.state * 180.0f / M_PI);
+
+    int num_rays = 16;
+    struct hit *scan = cast_rays(&p, test_arr, num_rays);
+
+    printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
+    struct frame *test_f = frame_create(0, 32, 16)
+    for (int i = 0; i < num_rays; i++) {
+        printf("Ray %d: dist=%.2f  hit=%d  ang=%.2f\n", i, scan[i].distance, scan[i].value, p.state + i * 2 * HALF_FOV / num_rays-HALF_FOV);
+    }
+
+    free(scan);
+}
 
 
 int main(){
+    test_world_and_rays();
+    return 0;
+    /*
     struct frame *test_f = frame_create(0, 32, 16);
 
 
@@ -95,4 +137,5 @@ int main(){
         frame_draw(test_f);
         usleep((int)(1000000 * (1.0f/FRAMERATE)));
     }
+    */
 }
