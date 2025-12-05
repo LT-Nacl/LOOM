@@ -1,37 +1,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "util/L_term_gfx.h"
 #include <math.h>
 #include <termios.h>
 #include <unistd.h>
-#include <fcntl.h>
+
+#include "util/L_term_gfx.h"
 #include "util/ray.h"
-static struct termios termios_orig;
-struct player{
-	float x;
-	float y;
-	char * inv; // for later
-	float state; //0 - 2PI.
+#include "util/main.h"
+#include "util/input.h"
 
-};
-
-
-void raw_begin(void) {
-    tcgetattr(STDIN_FILENO, &termios_orig);
-    struct termios raw = termios_orig;
-    raw.c_lflag &= ~(ICANON | ECHO | ISIG);
-    raw.c_cc[VMIN] = 1;  
-    raw.c_cc[VTIME] = 1;
-    tcsetattr(STDIN_FILENO, TCSANOW, &raw);
-}
-
-void raw_end(void) {
-    tcsetattr(STDIN_FILENO, TCSANOW, &termios_orig);
-}
-
-
-
+float x_max = 3.5f;
 
 int edit_world[64][64] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -98,10 +77,10 @@ int edit_world[64][64] = {
     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     };
-#define LEVEL_HEIGHT 64
-#define LEVEL_WIDTH 64
-#define HALF_FOV 0.78539816339f //pi/4
 int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH]; //the (test) world
+
+
+
 void handle_input(struct player *p, float move_speed, float turn_speed) {
     int ch = getchar();
     if (ch == -1) printf("nip");
@@ -135,14 +114,6 @@ void handle_input(struct player *p, float move_speed, float turn_speed) {
     p->state = fmodf(p->state, 2 * M_PI);
 }
 
-
-
-
-//trig time
-
-//need to check walls from state-HALF_FOV to state+half_FOV
-//idea 1 naive check is to iterate through the world and check if the trig aligns
-//idea 2 sweep by angle and check from player out to the first non 0, works because distance is needed for drawing anyways
 
 
 void test_world_and_rays()
@@ -183,7 +154,7 @@ void test_world_and_rays()
 
 	   printf("=== %d RAYS (FOV %.0f deg) ===\n", num_rays, 2*HALF_FOV*180/M_PI);
 	   */
-	float x_max = 3.5f;
+	
 
 
 	/*
@@ -191,7 +162,7 @@ void test_world_and_rays()
 	   printf("Ray %d: dist=%.2f  hit=%d  ang=%.2f\n", i, scan[i].distance, scan[i].value, p.state + i * 2 * HALF_FOV / num_rays-HALF_FOV);
 	   }
 	   */
-	float offset = 0.01f;
+	//float offset = 0.01f;
 	p.state = 0;
 	struct frame f;
 	f.id = 0;
@@ -207,7 +178,8 @@ void test_world_and_rays()
         */
         
 		int num_rays = 512;
-		struct hit *scan = cast_rays(&p, test_arr, num_rays);
+		struct hit * scan;
+        scan = p_cast_rays(&p, test_arr, num_rays);
 		for (int i = 0; i < num_rays; i++) {
 			float dy =  (f.height / 2.0f) * x_max / fmaxf(scan[i].distance, 0.1f);
 			int low = f.height/2 - (int)dy;
