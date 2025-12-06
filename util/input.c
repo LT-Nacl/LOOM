@@ -13,6 +13,7 @@ void raw_begin(void) {
     raw.c_cc[VMIN] = 1;  
     raw.c_cc[VTIME] = 1;
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 }
 
 void raw_end(void) {

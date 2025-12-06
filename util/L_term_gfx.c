@@ -85,6 +85,8 @@ void frame_draw(struct frame *f) {
                 putchar_rgb(0x16161d,v);
             }else if(v=='#'){
                 putchar_rgb(0x00ff00,v);   
+            }else if(v=='E'){
+                putchar_rgb(0xff0000,v);
             }else{
             putchar(v ? v : ' ');
             }

@@ -22,6 +22,7 @@ struct enemy{
     float y;
     int dmg;
     int hp;
+    char face;
 };
 
 #endif
