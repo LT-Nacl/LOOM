@@ -25,7 +25,22 @@ struct frame{
     int height;
     char dat[4096]; 
 };
-
+void draw_sprite(struct frame *f, const char *sprite_data, int sprite_w, int sprite_h, int x, int y) {
+    for (int sy = 0; sy < sprite_h; sy++) {
+        int dest_y = y + sy;
+        if (dest_y < 0 || dest_y >= f->height) continue;
+        
+        for (int sx = 0; sx < sprite_w; sx++) {
+            int dest_x = x + sx;
+            if (dest_x < 0 || dest_x >= f->width) continue;
+            
+            char c = sprite_data[sy * sprite_w + sx];
+            if (c != 0) {  // 0 = transparent
+                f->dat[dest_y * f->width + dest_x] = c;
+            }
+        }
+    }
+}
 struct frame* frame_create(int id, int w, int h) {
     struct frame *f = malloc(sizeof(struct frame));
     if (!f) return NULL;
@@ -53,8 +68,15 @@ void clear_frame(struct frame *f){
         f->dat[i] = 0;
     }
 }
+
+void frame_add(struct frame *f1, struct frame *f2){
+    for(int i = 0; i < f1->width * f1->height; ){
+        f1->dat[i] = f2->dat[i];
+    }
+}
 void frame_draw(struct frame *f) {
     printf("\033[2J\033[H");
+
     for (int y = 0; y < f->height; y++) {
         const char *row = &f->dat[y * f->width];
         for (int x = 0; x < f->width; x++) {

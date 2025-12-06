@@ -17,4 +17,5 @@ void frame_draw(struct frame *f);
 void draw_col_sing(struct frame *f, char val, int x, int lower, int upper);
 void clear_frame(struct frame *f);
 void draw_text(struct frame *f, const char *text, int x, int y, int color);
+void draw_sprite(struct frame *f, const char *sprite_data, int sprite_w, int sprite_h, int x, int y);
 #endif

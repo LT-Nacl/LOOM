@@ -17,4 +17,11 @@ struct player{
 
 };
 
+struct enemy{
+    float x;
+    float y;
+    int dmg;
+    int hp;
+};
+
 #endif

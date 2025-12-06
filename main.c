@@ -4,11 +4,56 @@
 #include <math.h>
 #include <termios.h>
 #include <unistd.h>
-
+#include <time.h>
 #include "util/L_term_gfx.h"
 #include "util/ray.h"
 #include "util/main.h"
 #include "util/input.h"
+const char crosshair[5][5] = {    {0, 0,'|',0, 0},
+    {0, 0,'|',0, 0},
+    {'-','-','+','-','-'},
+    {0, 0,'|',0, 0},
+    {0, 0,'|',0, 0}
+};
+
+
+const char shotgun[8][12] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0,'_','_', 0, 0},
+    {0, 0, 0, 0, 0, 0,'_','[','=','=',']', 0},
+    {0, 0, 0,'_','_','[','=','=','=','=','|', 0},
+    {0,'_','_','[','=','=','=','=','=','|', 0, 0},
+    {'_','[','=','=','=','=','=','=','|', 0, 0, 0},
+    {'[','=','=','=','|','|', 0, 0, 0, 0, 0, 0},
+    {'|','|', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+const char enemy[5][5] = {
+    {'E','E','E','E','E'},
+    {'E','E','E','E','E'},
+    {'E','E','E','E','E'},
+    {'E','E','E','E','E'},
+    {'E','E','E','E','E'}
+};
+
+const char blast[8][8] = {
+    {0,0,'%','%','%','%','%',0},
+    {0,'%','%','%','%','%','%',0},
+    {0,'%','%','%','%','%','%','%'},
+    {'%','%','%','%','%','%','%','%'},
+    {'%','%','%','%','%','%','%','%'},
+    {'%','%','%','%','%','%','%',0},
+    {'%','%','%','%','%','%','%',0},
+    {'%','%','%','%','%','%',0,0},
+};
+
+long long last;
+int shooting = 0;
+void bang(long long millis){
+    if(millis-last > 500 ){
+        shooting = 1;
+    }
+}
 
 float x_max = 3.5f;
 
@@ -81,7 +126,7 @@ int test_arr[LEVEL_HEIGHT][LEVEL_WIDTH]; //the (test) world
 
 
 
-void handle_input(struct player *p, float move_speed, float turn_speed) {
+void handle_input(struct player *p, float move_speed, float turn_speed, long long millis) {
     int ch = getchar();
     if (ch == -1) printf("nip");
     
@@ -106,6 +151,9 @@ void handle_input(struct player *p, float move_speed, float turn_speed) {
         case 'd': 
             p->state += turn_speed;
             break;
+        case ' ':
+            bang(millis);
+            break;
         case 'q': 
             raw_end(); 
             exit(0);
@@ -118,9 +166,16 @@ void handle_input(struct player *p, float move_speed, float turn_speed) {
 
 void test_world_and_rays()
 {
+    struct enemy enemyList[10]; 
+    enemyList[0].hp = 100;
+    enemyList[0].x = 1.0f;
+    enemyList[0].y = 1.0f;
+    
+
     int s_x = 64;
     int s_y = 64;
-	
+	struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
 
 	for (int x = 0; x < s_x; x++) {
 		for (int y = 0; y < s_y; y++) {
@@ -170,9 +225,28 @@ void test_world_and_rays()
         int hp = 100;
         sprintf(buffer[0], "X: %lf Y: %lf HP %d", p.x, p.y, hp);
         draw_text(test_f, buffer[0], 0, 44, 0xffffff);
+
+
+        // time
+        long long millis = (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+
+
+        // sprites
+        draw_sprite(test_f, (const char*)shotgun, 12, 8, 0, f.height - 8);
+        draw_sprite(test_f, (const char*)crosshair, 5, 5, f.width/2 - 2, f.height/2 - 2);
+        if(shooting){
+            draw_sprite(test_f, (const char*)blast, 8, 8, 15, f.height - 20);
+            if(millis - last > 300){
+                shooting = 0;
+            }
+        }
+        //enemys
+        for(int i = 0; i<10; i++){
+            
+        }
 		frame_draw(test_f);
 		free(scan);
-        handle_input(&p, 1.0f, .1f);
+        handle_input(&p, 1.0f, .1f,millis);
 		usleep((int)(1000000 * (1.0f/FRAMERATE)));
 	}
 	free(test_f);
@@ -184,6 +258,8 @@ void test_world_and_rays()
 
 
 int main(){
+    
+
 	test_world_and_rays();
     raw_end();
 	return 0;
